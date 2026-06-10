@@ -16,6 +16,25 @@ function sortedPositions(arr, sortedIds) {
   arr.forEach((o, k) => { if (o && sortedIds.has(o.id)) out.push(k); });
   return out;
 }
+// duas disposições são "iguais" se cada posição tem o mesmo id (ou buraco)
+function sameArrangement(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const ia = a[i] ? a[i].id : null, ib = b[i] ? b[i].id : null;
+    if (ia !== ib) return false;
+  }
+  return true;
+}
+// posições que mudaram em relação à disposição anterior
+function diffPositions(arr, prev) {
+  if (!prev) return [];
+  const out = [];
+  arr.forEach((s, i) => {
+    const ia = s ? s.id : null, ip = prev[i] ? prev[i].id : null;
+    if (ia !== ip) out.push(i);
+  });
+  return out;
+}
 
 /* ============================================================
    GERADORES DE PASSOS
@@ -60,7 +79,7 @@ function bubbleSteps(nums) {
   sortedIds.add(a[0].id);
   steps.push({
     array: snap(a), sorted: a.map((_, k) => k),
-    caption: "Vetor ordenado! ✅", pass, done: true
+    caption: "Vetor ordenado!", pass, done: true
   });
   return steps;
 }
@@ -110,7 +129,7 @@ function selectionSteps(nums) {
   sortedIds.add(a[n - 1].id);
   steps.push({
     array: snap(a), sorted: a.map((_, k) => k),
-    caption: "Vetor ordenado! ✅", done: true
+    caption: "Vetor ordenado!", done: true
   });
   return steps;
 }
@@ -147,7 +166,7 @@ function insertionSteps(nums) {
   }
   steps.push({
     array: snap(a), temp: null, sorted: a.map((_, k) => k),
-    caption: "Vetor ordenado! ✅", done: true
+    caption: "Vetor ordenado!", done: true
   });
   return steps;
 }
@@ -203,7 +222,7 @@ function quickSteps(nums) {
   }
 
   qs(0, a.length - 1, 1);
-  push({ sorted: a.map((_, k) => k), caption: "Vetor ordenado! ✅", done: true });
+  push({ sorted: a.map((_, k) => k), caption: "Vetor ordenado!", done: true });
   return steps;
 }
 
@@ -228,7 +247,7 @@ function binarySteps(nums, target) {
     if (a[mid].v === target) {
       steps.push({
         array: snap(a), lo, mid, hi, foundAt: mid,
-        caption: `${target} encontrado no índice ${mid}! ✅`, pass: iter, done: true
+        caption: `${target} encontrado no índice ${mid}!`, pass: iter, done: true
       });
       return steps;
     } else if (a[mid].v < target) {
@@ -247,7 +266,7 @@ function binarySteps(nums, target) {
   }
   steps.push({
     array: snap(a), lo, hi, notFound: true,
-    caption: `${target} não está no vetor. ❌`, pass: iter, done: true
+    caption: `${target} não está no vetor.`, pass: iter, done: true
   });
   return steps;
 }
@@ -262,7 +281,7 @@ const ALGOS = {
   bubble: {
     slug: "bubble", emoji: "🫧", title: "Bubble Sort",
     sub: "Ordenação bolha", cx: "O(n²)", mode: "sort",
-    gen: bubbleSteps, defaultArray: [25, 48, 37, 12, 57, 86, 33, 92],
+    gen: bubbleSteps, defaultArray: [25, 48, 37, 12, 57, 86],
     blurb: `<p>Compara <b>pares de vizinhos</b> e troca quando estão fora de ordem. A cada passada completa, o maior valor "borbulha" até o fim do vetor.</p>
             <p>Repete o processo até o vetor estar ordenado. A cada passada, uma posição do fim já fica garantida.</p>
             <p class="note" style="color:var(--muted);font-size:.85rem">Metáfora: valores maiores são bolhas leves — sobem para o fim. Pior/médio caso <b>O(n²)</b>.</p>`,
@@ -283,7 +302,7 @@ const ALGOS = {
   insertion: {
     slug: "insertion", emoji: "📥", title: "Ordenação por Inserção",
     sub: "Insertion sort", cx: "O(n²)", mode: "insertion",
-    gen: insertionSteps, defaultArray: [6, 5, 3, 1, 8, 7, 2, 4],
+    gen: insertionSteps, defaultArray: [6, 5, 3, 1, 8, 7],
     blurb: `<p>Percorre da <b>esquerda para a direita</b>. A cada elemento, guarda-o em <b>TEMP</b> e procura seu lugar entre os elementos já ordenados à esquerda.</p>
             <p>Os maiores que o TEMP são <b>deslocados para a direita</b> até abrir o espaço certo; então o TEMP é inserido.</p>
             <p class="note" style="color:var(--muted);font-size:.85rem">Ótimo para vetores quase ordenados. Caso geral <b>O(n²)</b>.</p>`,
@@ -304,7 +323,7 @@ const ALGOS = {
   selection: {
     slug: "selection", emoji: "🎯", title: "Ordenação por Seleção",
     sub: "Selection sort", cx: "O(n²)", mode: "sort",
-    gen: selectionSteps, defaultArray: [8, 5, 2, 6, 9, 3, 1, 4],
+    gen: selectionSteps, defaultArray: [8, 5, 2, 6, 9, 3],
     blurb: `<p>A cada passada, <b>procura o menor valor</b> do trecho ainda não ordenado e o <b>troca</b> para a primeira posição livre.</p>
             <p>A parte esquerda do vetor vai ficando ordenada, uma posição por passada.</p>
             <p class="note" style="color:var(--muted);font-size:.85rem">Faz no máximo <b>n-1 trocas</b> (poucas trocas), mas sempre <b>O(n²)</b> comparações.</p>`,
@@ -328,7 +347,7 @@ const ALGOS = {
   quick: {
     slug: "quick", emoji: "⚡", title: "Quick Sort",
     sub: "Divisão e conquista", cx: "O(n log n)", mode: "sort",
-    gen: quickSteps, defaultArray: [25, 57, 48, 37, 12, 92, 86, 33],
+    gen: quickSteps, defaultArray: [25, 57, 48, 37, 12, 92],
     blurb: `<p><b>Divisão e conquista.</b> Escolhe um <b>pivô</b> (aqui, o primeiro elemento) e <b>particiona</b>: menores à esquerda, maiores à direita.</p>
             <p>Após a partição, o pivô fica na sua <b>posição final</b>. Então o algoritmo se chama <b>recursivamente</b> em cada partição.</p>
             <p class="note" style="color:var(--muted);font-size:.85rem">Média <b>O(n log n)</b>, pior caso O(n²).</p>`,
@@ -359,7 +378,7 @@ int particao(int* vet, int esq, int dir) {
   binary: {
     slug: "binary", emoji: "🔍", title: "Busca Binária",
     sub: "Binary search", cx: "O(log n)", mode: "binary",
-    gen: binarySteps, defaultArray: [3, 8, 12, 15, 21, 27, 33, 40, 45, 52],
+    gen: binarySteps, defaultArray: [3, 8, 12, 15, 21, 27, 33, 40],
     defaultTarget: 27,
     blurb: `<p>Funciona <b>somente em vetor ordenado</b>. Olha o elemento do <b>meio</b>:</p>
             <p>• se for o alvo, achou;<br>• se o alvo for <b>menor</b>, busca na metade <b>esquerda</b>;<br>• se for <b>maior</b>, na metade <b>direita</b>.</p>
@@ -404,13 +423,13 @@ const SIMULADOS = {
         num: "1a", text: `Vetor ordenado <span class="vec">[3, 8, 12, 15, 21, 27, 33, 40, 45, 52]</span>. Simule a <b>busca binária</b> pelo valor <b>27</b>, mostrando início, meio e fim em cada etapa.`,
         ans: `<div class="step"><b>1)</b> início=0, meio=4 (21), fim=9 → 21 &lt; 27, vai à direita</div>
               <div class="step"><b>2)</b> início=5, meio=7 (40), fim=9 → 40 &gt; 27, vai à esquerda</div>
-              <div class="step"><b>3)</b> início=5, meio=5 (27), fim=6 → <b>encontrado no índice 5</b> ✅</div>`
+              <div class="step"><b>3)</b> início=5, meio=5 (27), fim=6 → <b>encontrado no índice 5</b></div>`
       },
       {
         num: "1b", text: `No mesmo vetor, simule a <b>busca binária</b> pelo valor <b>3</b>.`,
         ans: `<div class="step"><b>1)</b> início=0, meio=4 (21), fim=9 → 21 &gt; 3, vai à esquerda</div>
               <div class="step"><b>2)</b> início=0, meio=1 (8), fim=3 → 8 &gt; 3, vai à esquerda</div>
-              <div class="step"><b>3)</b> início=0, meio=0 (3), fim=0 → <b>encontrado no índice 0</b> ✅</div>`
+              <div class="step"><b>3)</b> início=0, meio=0 (3), fim=0 → <b>encontrado no índice 0</b></div>`
       },
       {
         num: "2", text: `Aplique <b>ordenação por inserção</b> em <span class="vec">[9, 5, 1, 4, 3]</span>, mostrando o vetor após cada inserção.`,
@@ -434,7 +453,7 @@ const SIMULADOS = {
               <div class="step">Após passada 1: [3, 6, 2, 7, 8]</div>
               <div class="step">Após passada 2: [3, 2, 6, 7, 8]</div>
               <div class="step">Após passada 3: [2, 3, 6, 7, 8]</div>
-              <div class="step">Após passada 4: [2, 3, 6, 7, 8] ✅</div>`
+              <div class="step">Após passada 4: [2, 3, 6, 7, 8]</div>`
       },
       {
         num: "5", text: `Programa em C: lê 10 inteiros <b>em ordem crescente</b>, implementa uma função de <b>busca binária</b> e informa a posição do valor procurado (ou que não foi encontrado).`,
@@ -534,6 +553,7 @@ function Visualizer(root, algo) {
   let steps = [];
   let idx = 0;
   let timer = null;
+  let lastLineCount = 0;       // nº de linhas do log no último render (p/ animar só linhas novas)
   const cellEls = new Map();   // id -> elemento .cell
 
   // --- DOM ---
@@ -544,11 +564,11 @@ function Visualizer(root, algo) {
         <span class="temp-label">TEMP</span>
         <div class="temp-slot" id="tempSlot"></div>
       </div>` : ""}
-      <div class="cells-wrap">
-        <div class="cells" id="cells"></div>
-        ${algo.mode === "binary" ? `<div class="markers" id="markers"></div>` : ""}
+      <div class="cells-wrap${algo.mode === "binary" ? "" : " log"}">
+        ${algo.mode === "binary"
+          ? `<div class="cells" id="cells"></div><div class="markers" id="markers"></div>`
+          : `<div class="cells-log" id="cellsLog"></div>`}
       </div>
-      <div class="progress"><span id="bar"></span></div>
       <div class="caption" id="caption"></div>
       <div class="passinfo" id="passinfo"></div>
       <div class="controls">
@@ -558,19 +578,22 @@ function Visualizer(root, algo) {
         <button class="ctrl" id="btnNext"><span class="ico">▶</span>Próximo</button>
         <button class="ctrl" id="btnEnd"><span class="ico">⏭</span>Fim</button>
       </div>
-      <div class="array-input">
+      <button class="ctrl test-toggle" id="btnCustom">Testar com seus próprios números</button>
+      <div class="array-input" id="arrayInput" hidden>
         <label>Teste com seus próprios números:</label>
         <input id="arrInput" inputmode="numeric" value="${algo.defaultArray.join(", ")}" />
         ${algo.mode === "binary" ? `<input id="tgtInput" class="small" inputmode="numeric" value="${algo.defaultTarget}" aria-label="valor procurado" />` : ""}
         <button class="apply" id="btnApply">Aplicar</button>
+        ${algo.mode === "binary" ? `<p class="hint">Os números são ordenados automaticamente. O segundo campo é o valor procurado.</p>` : ""}
       </div>
-      <p class="hint">${algo.mode === "binary"
-        ? "Os números são ordenados automaticamente. O segundo campo é o valor procurado."
-        : "Separe os números por vírgula ou espaço."}</p>
     </div>`;
 
   const $ = (id) => root.querySelector("#" + id);
-  const cellsBox = $("cells");
+  // modos de ordenação usam o "log" (uma linha nova por passo);
+  // a busca binária continua numa única linha com os marcadores.
+  const logMode = algo.mode !== "binary";
+  const cellsBox = logMode ? null : $("cells");
+  const logBox = logMode ? $("cellsLog") : null;
   const tempSlot = algo.mode === "insertion" ? $("tempSlot") : null;
   const markersBox = algo.mode === "binary" ? $("markers") : null;
 
@@ -652,40 +675,109 @@ function Visualizer(root, algo) {
     }
   }
 
-  function render(animate) {
-    const step = steps[idx];
-    // FLIP: mede posições antes
-    const first = new Map();
-    if (animate && !reduceMotion) {
-      cellEls.forEach((el, id) => {
-        if (el.isConnected) first.set(id, el.querySelector(".box").getBoundingClientRect());
-      });
+  // monta UMA linha do log. `changed` = posições que mudaram em relação à
+  // linha anterior (sempre destacadas, em cor própria, para ver o que mudou).
+  // Os destaques "ao vivo" (compara/troca/pivô/...) só vão na linha ativa.
+  function buildRow(step, active, changed) {
+    const row = document.createElement("div");
+    row.className = "cells-row" + (active ? " active" : "");
+    step.array.forEach((slot, k) => {
+      const cell = document.createElement("div");
+      if (slot) {
+        cell.className = "cell";
+        cell.dataset.id = slot.id;
+        cell.innerHTML = `<div class="box">${slot.v}</div><div class="idx">${k}</div>`;
+      } else {
+        cell.className = "cell hole";
+        cell.innerHTML = `<div class="box"></div><div class="idx">${k}</div>`;
+      }
+      row.appendChild(cell);
+    });
+    const cells = [...row.children];
+    const setCls = (i, cls) => { if (i != null && cells[i]) cells[i].classList.add(cls); };
+    // o que mudou nesta linha (não marca buracos)
+    (changed || []).forEach(i => { if (cells[i] && !cells[i].classList.contains("hole")) setCls(i, "changed"); });
+    (step.sorted || []).forEach(i => setCls(i, "sorted"));
+    if (active) {
+      (step.compare || []).forEach(i => setCls(i, "compare"));
+      (step.swap || []).forEach(i => setCls(i, "swap"));
+      if (step.pivot != null) setCls(step.pivot, "pivot");
+      if (step.min != null) setCls(step.min, "min");
+      if (step.cursor != null) setCls(step.cursor, "cursor");
+    }
+    return row;
+  }
+
+  function renderLog(animate) {
+    // agrupa os passos em "linhas": uma linha nova só quando a DISPOSIÇÃO
+    // muda (uma troca/movimento). Comparações ficam na mesma linha.
+    const lines = [];
+    for (let k = 0; k <= idx; k++) {
+      if (k === 0 || !sameArrangement(steps[k].array, steps[k - 1].array)) lines.push({ start: k, end: k });
+      else lines[lines.length - 1].end = k;
     }
 
-    layout(step);
+    logBox.innerHTML = "";
+    const rows = [];
+    lines.forEach((ln, L) => {
+      const active = L === lines.length - 1;
+      const repStep = active ? steps[idx] : steps[ln.end];
+      const prevArr = L > 0 ? steps[lines[L - 1].start].array : null;
+      const r = buildRow(repStep, active, diffPositions(repStep.array, prevArr));
+      logBox.appendChild(r);
+      rows.push(r);
+    });
 
-    if (animate && !reduceMotion) {
-      cellEls.forEach((el, id) => {
-        const f = first.get(id);
-        if (!f || !el.isConnected) return;
-        const l = el.querySelector(".box").getBoundingClientRect();
+    // TEMP (inserção) — reflete o passo atual
+    if (tempSlot) {
+      tempSlot.innerHTML = "";
+      const step = steps[idx];
+      if (step.temp) tempSlot.innerHTML = `<div class="cell"><div class="box">${step.temp.v}</div><div class="idx"></div></div>`;
+    }
+
+    const lastRow = rows[rows.length - 1];
+    lastRow.scrollIntoView({ block: "nearest", inline: "nearest" });
+
+    // FLIP só quando uma linha NOVA surge (mudança real). Comparações não
+    // criam linha — só atualizam destaques, sem deslizar. O transform vai
+    // na .cell, então o "pop" da troca (na .box) compõe sem ser sobrescrito.
+    const grew = lines.length > lastLineCount;
+    if (animate && !reduceMotion && grew && rows.length > 1) {
+      const prevById = new Map();
+      [...rows[rows.length - 2].children].forEach(c => {
+        if (c.dataset.id) prevById.set(c.dataset.id, c.getBoundingClientRect());
+      });
+      [...lastRow.children].forEach(c => {
+        const f = c.dataset.id ? prevById.get(c.dataset.id) : null;
+        if (!f) return;
+        const l = c.getBoundingClientRect();
         const dx = f.left - l.left, dy = f.top - l.top;
         if (dx || dy) {
-          const box = el.querySelector(".box");
-          box.style.transition = "none";
-          box.style.transform = `translate(${dx}px, ${dy}px)`;
+          c.style.transition = "none";
+          c.style.transform = `translate(${dx}px, ${dy}px)`;
           requestAnimationFrame(() => {
-            box.style.transition = "transform .35s cubic-bezier(.22,.61,.36,1)";
-            box.style.transform = "";
+            c.style.transition = "transform .35s cubic-bezier(.22,.61,.36,1)";
+            c.style.transform = "";
           });
         }
       });
+    }
+    lastLineCount = lines.length;
+  }
+
+  function render(animate) {
+    const step = steps[idx];
+
+    if (logMode) {
+      renderLog(animate);
+    } else {
+      // busca binária: vetor não reordena, basta desenhar (sem FLIP)
+      layout(step);
     }
 
     $("caption").textContent = step.caption;
     $("passinfo").textContent = `Passo ${idx + 1} de ${steps.length}` +
       (step.pass ? ` • ${algo.mode === "binary" ? "iteração" : "passada"} ${step.pass}` : "");
-    $("bar").style.width = `${(idx / (steps.length - 1)) * 100}%`;
     $("btnPrev").disabled = idx === 0;
     $("btnNext").disabled = idx === steps.length - 1;
     $("btnEnd").disabled = idx === steps.length - 1;
@@ -731,6 +823,7 @@ function Visualizer(root, algo) {
   $("btnReset").onclick = () => { stop(); cellEls.clear(); idx = 0; render(false); };
   $("btnPlay").onclick = () => play();
   $("btnApply").onclick = () => { stop(); build(); };
+  $("btnCustom").onclick = () => { $("arrayInput").hidden = false; $("btnCustom").hidden = true; $("arrInput").focus(); };
   $("arrInput").addEventListener("keydown", e => { if (e.key === "Enter") { stop(); build(); } });
 
   build();
@@ -769,13 +862,10 @@ function renderHome() {
   topbarTitle.textContent = "Cola AV2";
   backBtn.hidden = true;
   app.innerHTML = `
-    <p class="intro">Sua cola de revisão. Toque em um tópico para ver a <b>explicação</b> e o <b>visualizador passo a passo</b>.</p>
     <div class="grid">
       ${HOME_CARDS.map(c => `
         <button class="card" data-go="${c.slug}">
-          <span class="emoji">${c.emoji}</span>
           <span class="card-title">${c.title}</span>
-          <span class="card-sub">${c.sub}</span>
           <span class="badge">${c.badge}</span>
         </button>`).join("")}
     </div>`;
@@ -787,9 +877,12 @@ function renderAlgo(slug) {
   backBtn.hidden = false;
   app.innerHTML = `
     <div class="page-head">
-      <span class="emoji">${algo.emoji}</span>
       <h2>${algo.title}</h2>
       <span class="cx">${algo.cx}</span>
+    </div>
+
+    <div class="section">
+      <div class="panel"><div id="vizRoot"></div></div>
     </div>
 
     <div class="section">
@@ -797,13 +890,10 @@ function renderAlgo(slug) {
     </div>
 
     <div class="section">
-      <h2>👁️ Visualizador</h2>
-      <div class="panel"><div id="vizRoot"></div></div>
-    </div>
-
-    <div class="section">
-      <h2>💻 Código</h2>
-      <pre class="code">${highlightCode(algo.code)}</pre>
+      <details class="code-reveal">
+        <summary>Código <span class="chev">▸</span></summary>
+        <pre class="code">${highlightCode(algo.code)}</pre>
+      </details>
     </div>`;
   activeViz = Visualizer(app.querySelector("#vizRoot"), algo);
 }
